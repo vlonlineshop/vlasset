@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Asset & Money Management</title>
+  <style>
+    :root {
+      --primary: #4e73df;
+      --background: #f8f9fc;
+      --text: #1b1e23;
+      --border: #dee2e6;
+      --card: #ffffff;
+      --shadow: rgba(0, 0, 0, 0.1);
+    }
+    body.dark {
+      --primary: #4e73df;
+      --background: #1e1e2f;
+      --text: #ffffff;
+      --border: #444;
+      --card: #2a2a3d;
+      --shadow: rgba(255, 255, 255, 0.1);
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .container {
+      width: 100%;
+      max-width: 960px;
+      background: var(--card);
+      box-shadow: 0 4px 12px var(--shadow);
+      border-radius: 12px;
+      padding: 24px 32px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+    h2, h3 {
+      text-align: center;
+      color: var(--primary);
+      margin: 0 0 12px 0;
+      user-select: none;
+    }
+    label.toggle-dark {
+      align-self: flex-end;
+      margin-bottom: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+    }
+    label.toggle-dark input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    /* Form styles */
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+    }
+    form > * {
+      flex: 1 1 140px;
+      max-width: 180px;
+      padding: 10px 14px;
+      font-size: 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      transition: border-color 0.3s;
+      background: var(--background);
+      color: var(--text);
+      box-sizing: border-box;
+    }
+    form > *:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 6px var(--primary);
+      background: var(--card);
+    }
+    form button {
+      max-width: 140px;
+      background-color: var(--primary);
+      color: white;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.25s;
+      box-shadow: 0 3px 8px var(--primary);
+    }
+    form button:hover {
+      background-color: #3756b8;
+      box-shadow: 0 4px 12px #3756b8;
+    }
+
+    /* Table common */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px var(--shadow);
+      background: var(--card);
+      user-select: none;
+    }
+    thead tr {
+      background-color: var(--primary);
+      color: white;
+      font-weight: 600;
+      text-align: center;
+      user-select: none;
+    }
+    tbody tr {
+      transition: background-color 0.15s;
+    }
+    tbody tr:nth-child(even) {
+      background-color: var(--background);
+    }
+    tbody tr:hover {
+      background-color: #dce7ff;
+      cursor: default;
+    }
+    th, td {
+      padding: 12px 14px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      font-size: 0.9rem;
+    }
+    tfoot td {
+      font-weight: 700;
+      background-color: #e9ecef;
+      color: var(--text);
+      text-align: right;
+      padding-right: 16px;
+    }
+    body.dark tfoot td {
+      background-color: #333;
+      color: #eee;
+    }
+
+    /* Buttons inside table */
+    .action-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.25s;
+      user-select: none;
+    }
+    .edit-btn {
+      background-color: #f39c12;
+      color: white;
+    }
+    .edit-btn:hover {
+      background-color: #c87c0b;
+    }
+    .delete-btn {
+      background-color: #e74c3c;
+      color: white;
+    }
+    .delete-btn:hover {
+      background-color: #b33127;
+    }
+
+    /* Container for riwayat transaksi with scroll */
+    .riwayat-container {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: inset 0 0 10px var(--shadow);
+      background: var(--card);
+    }
+
+    /* Export CSV button spacing */
+    .export-btn {
+      margin-left: 8px;
+      padding: 10px 20px;
+      background-color: #28a745;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      user-select: none;
+    }
+    .export-btn:hover {
+      background-color: #218838;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      form > * {
+        max-width: 100%;
+        flex: 1 1 100%;
+      }
+      tfoot td {
+        font-size: 0.9rem;
+      }
+      th, td {
+        font-size: 0.85rem;
+        padding: 10px 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" role="main" aria-label="Asset & Money Management">
+    <h2>Asset & Money Management</h2>
+
+    <label class="toggle-dark" for="darkToggle">
+      <input type="checkbox" id="darkToggle" aria-label="Toggle dark mode" />
+      Dark Mode
+    </label>
+
+    <form id="formTambahAsset" aria-label="Form tambah atau update aset" onsubmit="event.preventDefault(); tambahAtauUpdateAsset();">
+      <input type="hidden" id="editIndex" aria-hidden="true" />
+      <input type="date" id="tanggalAsset" aria-label="Tanggal asset" required />
+      <input type="text" id="namaAsset" placeholder="Nama Aset" aria-label="Nama aset" required />
+      <input type="number" id="saldoAwal" placeholder="Saldo Awal" aria-label="Saldo awal aset" required />
+      <input type="number" id="saldoAkhir" placeholder="Saldo Akhir" aria-label="Saldo akhir aset" required />
+      <button type="submit" aria-label="Simpan aset">Simpan</button>
+      <button type="button" class="export-btn" id="exportAssetBtn" aria-label="Export data aset ke CSV">Export CSV</button>
+    </form>
+
+    <table aria-label="Tabel data aset">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Tanggal</th>
+          <th>Nama Aset</th>
+          <th>Saldo Awal</th>
+          <th>Saldo Akhir</th>
+          <th>Growth (%)</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tabelData"></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4" style="text-align:left;">Total Saldo Akhir:</td>
+          <td colspan="3" id="totalSaldo">Rp 0</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <h3>Tambah Transaksi</h3>
+    <form id="formTambahTransaksi" aria-label="Form tambah transaksi" onsubmit="event.preventDefault(); tambahTransaksi();">
+      <input type="date" id="tanggalTransaksi" aria-label="Tanggal transaksi" required />
+      <select id="jenisTransaksi" aria-label="Jenis transaksi" required>
+        <option value="" disabled selected>-- Pilih Jenis --</option>
+        <option value="Pemasukan">Pemasukan</option>
+        <option value="Pengeluaran">Pengeluaran</option>
+      </select>
+      <select id="namaAsetTransaksi" aria-label="Nama aset untuk transaksi" required>
+        <option value="" disabled selected>-- Pilih Aset --</option>
+      </select>
+      <input type="number" id="nominalTransaksi" placeholder="Nominal (Rp)" aria-label="Nominal transaksi" required min="1" />
+      <input type="text" id="keteranganTransaksi" placeholder="Keterangan (opsional)" aria-label="Keterangan transaksi" />
+      <button type="submit" aria-label="Simpan transaksi">Simpan</button>
+      <button type="button" class="export-btn" id="exportTransaksiBtn" aria-label="Export data transaksi ke CSV">Export CSV</button>
+    </form>
+
+    <h3>Riwayat Transaksi</h3>
+    <div class="riwayat-container" role="region" aria-label="Daftar riwayat transaksi dengan scrollbar">
+      <table aria-label="Tabel riwayat transaksi">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Tanggal</th>
+            <th>Jenis</th>
+            <th>Nama Aset</th>
+            <th>Nominal</th>
+            <th>Keterangan</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tabelRiwayat"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Data array
+    let data = JSON.parse(localStorage.getItem("asetData")) || [];
+    let transaksiData = JSON.parse(localStorage.getItem("transaksiData")) || [];
+
+    // Format Rupiah
+    function formatRupiah(angka) {
+      return "Rp " + angka.toLocaleString("id-ID");
+    }
+
+    // Save local storage helper
+    function simpanLocalStorage() {
+      localStorage.setItem("asetData", JSON.stringify(data));
+    }
+    function simpanTransaksiLocalStorage() {
+      localStorage.setItem("transaksiData", JSON.stringify(transaksiData));
+    }
+
+    // Asset Functions
+    function tambahAtauUpdateAsset() {
+      const tanggal = document.getElementById("tanggalAsset").value;
+      const nama = document.getElementById("namaAsset").value.trim();
+      const saldoAwal = parseFloat(document.getElementById("saldoAwal").value);
+      const saldoAkhir = parseFloat(document.getElementById("saldoAkhir").value);
+      const editIndex = document.getElementById("editIndex").value;
+
+      if (!tanggal || !nama || isNaN(saldoAwal) || isNaN(saldoAkhir)) {
+        alert("Mohon isi semua kolom dengan benar.");
+        return;
+      }
+
+      const growth = saldoAwal === 0 ? 0 : ((saldoAkhir - saldoAwal) / saldoAwal) * 100;
+
+      if (editIndex === "") {
+        data.push({ tanggal, nama, saldoAwal, saldoAkhir, growth });
+      } else {
+        data[editIndex] = { tanggal, nama, saldoAwal, saldoAkhir, growth };
+        document.getElementById("editIndex").value = "";
+      }
+
+      simpanLocalStorage();
+      renderTabel();
+      renderDropdownAset();
+      resetFormAsset();
+    }
+
+    function renderTabel() {
+      const tbody = document.getElementById("tabelData");
+      tbody.innerHTML = "";
+      let totalSaldo = 0;
+
+      data.forEach((item, index) => {
+        totalSaldo += item.saldoAkhir;
+        tbody.innerHTML += `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${item.tanggal}</td>
+            <td>${item.nama}</td>
+            <td>${formatRupiah(item.saldoAwal)}</td>
+            <td>${formatRupiah(item.saldoAkhir)}</td>
+            <td>${item.growth.toFixed(2)}%</td>
+            <td>
+              <button class="action-btn edit-btn" onclick="editData(${index})" aria-label="Edit aset ${item.nama}">Edit</button>
+              <button class="action-btn delete-btn" onclick="hapusData(${index})" aria-label="Hapus aset ${item.nama}">Hapus</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      document.getElementById("totalSaldo").innerText = formatRupiah(totalSaldo);
+    }
+
+    function editData(index) {
+      const item = data[index];
+      document.getElementById("tanggalAsset").value = item.tanggal;
+      document.getElementById("namaAsset").value = item.nama;
+      document.getElementById("saldoAwal").value = item.saldoAwal;
+      document.getElementById("saldoAkhir").value = item.saldoAkhir;
+      document.getElementById("editIndex").value = index;
+    }
+
+    function hapusData(index) {
+      if (!confirm("Yakin ingin menghapus aset ini?")) return;
+      data.splice(index, 1);
+      simpanLocalStorage();
+      renderTabel();
+      renderDropdownAset();
+    }
+
+    function resetFormAsset() {
+      document.getElementById("tanggalAsset").value = "";
+      document.getElementById("namaAsset").value = "";
+      document.getElementById("saldoAwal").value = "";
+      document.getElementById("saldoAkhir").value = "";
+      document.getElementById("editIndex").value = "";
+    }
+
+    // Dropdown aset for transaksi form
+    function renderDropdownAset() {
+      const select = document.getElementById("namaAsetTransaksi");
+      select.innerHTML = `<option value="" disabled selected>-- Pilih Aset --</option>`;
+      data.forEach(item => {
+        const option = document.createElement("option");
+        option.value = item.nama;
+        option.textContent = item.nama;
+        select.appendChild(option);
+      });
+    }
+
+    // Transaksi Functions
+    function tambahTransaksi() {
+      const tanggal = document.getElementById("tanggalTransaksi").value;
+      const jenis = document.getElementById("jenisTransaksi").value;
+      const namaAset = document.getElementById("namaAsetTransaksi").value;
+      const nominal = parseFloat(document.getElementById("nominalTransaksi").value);
+      const keterangan = document.getElementById("keteranganTransaksi").value.trim();
+
+      if (!tanggal || !jenis || !namaAset || isNaN(nominal) || nominal <= 0) {
+        alert("Mohon isi semua kolom transaksi dengan benar.");
+        return;
+      }
+
+      transaksiData.push({ tanggal, jenis, namaAset, nominal, keterangan });
+      simpanTransaksiLocalStorage();
+      renderRiwayat();
+      resetFormTransaksi();
+    }
+
+    function renderRiwayat() {
+      const tbody = document.getElementById("tabelRiwayat");
+      tbody.innerHTML = "";
+
+      transaksiData.forEach((item, index) => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${item.tanggal}</td>
+            <td>${item.jenis}</td>
+            <td>${item.namaAset}</td>
+            <td>${formatRupiah(item.nominal)}</td>
+            <td>${item.keterangan || "-"}</td>
+            <td><button class="action-btn delete-btn" onclick="hapusTransaksi(${index})" aria-label="Hapus transaksi">Hapus</button></td>
+          </tr>
+        `;
+      });
+    }
+
+    function hapusTransaksi(index) {
+      if (!confirm("Yakin ingin menghapus transaksi ini?")) return;
+      transaksiData.splice(index, 1);
+      simpanTransaksiLocalStorage();
+      renderRiwayat();
+    }
+
+    function resetFormTransaksi() {
+      document.getElementById("tanggalTransaksi").value = "";
+      document.getElementById("jenisTransaksi").value = "";
+      document.getElementById("namaAsetTransaksi").value = "";
+      document.getElementById("nominalTransaksi").value = "";
+      document.getElementById("keteranganTransaksi").value = "";
+    }
+
+    // Export CSV
+    function exportToCsv(filename, rows) {
+      const processRow = row => {
+        return row.map(String)
+          .map(v => `"${v.replace(/"/g, '""')}"`)
+          .join(",");
+      };
+
+      let csvFile = rows.map(processRow).join("\n");
+      let blob = new Blob([csvFile], { type: "text/csv;charset=utf-8;" });
+      let link = document.createElement("a");
+      if (link.download !== undefined) {
+        let url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", filename);
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+
+    function exportAsetCsv() {
+      const rows = [
+        ["No", "Tanggal", "Nama Aset", "Saldo Awal", "Saldo Akhir", "Growth (%)"]
+      ];
+      data.forEach((item, i) => {
+        rows.push([
+          i + 1,
+          item.tanggal,
+          item.nama,
+          item.saldoAwal,
+          item.saldoAkhir,
+          item.growth.toFixed(2)
+        ]);
+      });
+      exportToCsv("aset_data.csv", rows);
+    }
+
+    function exportTransaksiCsv() {
+      const rows = [
+        ["No", "Tanggal", "Jenis", "Nama Aset", "Nominal", "Keterangan"]
+      ];
+      transaksiData.forEach((item, i) => {
+        rows.push([
+          i + 1,
+          item.tanggal,
+          item.jenis,
+          item.namaAset,
+          item.nominal,
+          item.keterangan || ""
+        ]);
+      });
+      exportToCsv("transaksi_data.csv", rows);
+    }
+
+    // Dark mode toggle
+    document.getElementById("darkToggle").addEventListener("change", e => {
+      document.body.classList.toggle("dark", e.target.checked);
+    });
+
+    // Export button listeners
+    document.getElementById("exportAssetBtn").addEventListener("click", exportAsetCsv);
+    document.getElementById("exportTransaksiBtn").addEventListener("click", exportTransaksiCsv);
+
+    // Initial render
+    renderTabel();
+    renderDropdownAset();
+    renderRiwayat();
+  </script>
+</body>
+</html>
