@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -22,170 +23,144 @@
       --border: #444;
       --card: #2a2a3d;
     }
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: 'Segoe UI', sans-serif;
       background-color: var(--background);
       color: var(--text);
-      padding: 20px;
       margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      min-height: 100vh;
       transition: background 0.3s, color 0.3s;
     }
-    h2, h3 { text-align: center; color: var(--primary); }
-    .container { max-width: 1000px; margin: 0 auto; }
-
-    .form-container {
+    h2, h3 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    .container {
+      width: 95%;
+      max-width: 960px;
+      padding: 20px;
+    }
+    .form-container, table, #chartContainer, .history-container, .transaction-form {
       background: var(--card);
       padding: 20px;
       border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
       margin-top: 20px;
-      animation: fadeIn 0.6s ease;
+      animation: fadeIn 0.5s ease-in-out;
     }
-
-    .form-container input,
-    .form-container select,
-    .form-container button {
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+    input, select, button {
       padding: 10px;
-      margin: 8px 5px;
+      margin: 5px 5px 10px 0;
       border: 1px solid var(--border);
       border-radius: 6px;
-      font-size: 1em;
-      transition: all 0.3s ease;
+      font-size: 14px;
     }
-
-    .form-container input:focus,
-    .form-container select:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 5px var(--primary);
-      outline: none;
-    }
-
-    .form-container input,
-    .form-container select {
+    select, input[type='date'], input[type='number'], input[type='text'] {
       width: calc(50% - 20px);
     }
-
-    .form-container button {
+    button {
       background-color: var(--primary);
       color: white;
       border: none;
       cursor: pointer;
+      width: 100%;
+      transition: background-color 0.3s ease;
     }
-
-    .form-container button:hover {
-      background-color: #3b5cc3;
-      transform: scale(1.02);
+    button:hover {
+      background-color: #375ab0;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
-      background: var(--card);
-      margin-top: 20px;
-      border-radius: 10px;
-      overflow: hidden;
     }
-
     th, td {
       padding: 10px;
       border-bottom: 1px solid var(--border);
       text-align: center;
     }
-
-    th { background: var(--primary); color: white; }
+    th {
+      background: var(--primary);
+      color: white;
+    }
     .action-btn {
       padding: 5px 10px;
       border: none;
       border-radius: 5px;
       cursor: pointer;
     }
-
-    .edit-btn { background: #f39c12; color: white; }
-    .delete-btn { background: #e74c3c; color: white; }
-
-    tfoot td { font-weight: bold; background: #e9ecef; }
-    .dark tfoot td { background: #333; }
-
-    .toggle-dark { float: right; margin-bottom: 10px; }
-
-    canvas { width: 100% !important; max-height: 400px; }
-
-    .form-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
+    .edit-btn {
+      background: #f39c12;
+      color: white;
+    }
+    .delete-btn {
+      background: #e74c3c;
+      color: white;
+    }
+    tfoot td {
+      font-weight: bold;
+      background: #e9ecef;
+    }
+    .dark tfoot td {
+      background: #333;
+    }
+    .toggle-dark {
+      float: right;
       margin-bottom: 10px;
     }
-
-    .btn-transaksi {
-      width: 100%;
-      padding: 12px;
-      background-color: var(--primary);
-      color: white;
-      font-size: 1em;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s ease, transform 0.2s ease;
+    canvas {
+      width: 100% !important;
+      max-height: 400px;
     }
-
-    .btn-transaksi:hover {
-      background-color: #3b5cc3;
-      transform: scale(1.02);
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @media (max-width: 600px) {
-      .form-container input,
-      .form-container select {
-        width: 100%;
+    @media (max-width: 768px) {
+      select, input {
+        width: 100% !important;
       }
-      .form-row { flex-direction: column; }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Asset & Money Management</h2>
-
     <label class="toggle-dark">
       <input type="checkbox" id="darkToggle"> Dark Mode
     </label>
 
-    <!-- Form Aset -->
     <div class="form-container">
+      <h3>Tambah / Edit Aset</h3>
       <input type="hidden" id="editIndex">
       <input type="date" id="tanggal">
       <input type="text" id="nama" placeholder="Nama Aset">
       <input type="number" id="saldoAwal" placeholder="Saldo Awal">
       <input type="number" id="saldoAkhir" placeholder="Saldo Akhir">
-      <button onclick="tambahAtauUpdate()">Simpan</button>
-      <button onclick="exportCSV()">Export CSV</button>
+      <button onclick="tambahAtauUpdate()">Simpan Aset</button>
     </div>
 
-    <!-- Form Transaksi -->
-    <div class="form-container transaksi-form">
+    <div class="transaction-form">
       <h3>Tambah Transaksi</h3>
-      <div class="form-row">
-        <input type="date" id="transTanggal">
-        <input type="text" id="transNamaAset" placeholder="Nama Aset">
-      </div>
-      <div class="form-row">
-        <select id="transTipe">
-          <option value="pemasukan">Pemasukan</option>
-          <option value="pengeluaran">Pengeluaran</option>
-        </select>
-        <input type="number" id="transNominal" placeholder="Jumlah">
-      </div>
-      <button class="btn-transaksi" onclick="tambahTransaksi()">Tambah Transaksi</button>
+      <input type="date" id="trxTanggal">
+      <select id="trxAset"></select>
+      <select id="trxTipe">
+        <option value="pemasukan">Pemasukan</option>
+        <option value="pengeluaran">Pengeluaran</option>
+      </select>
+      <input type="number" id="trxJumlah" placeholder="Jumlah (Rp)">
+      <input type="text" id="trxKeterangan" placeholder="Keterangan">
+      <button onclick="tambahTransaksi()">Tambah Transaksi</button>
     </div>
 
-    <!-- Tabel Aset -->
     <table>
       <thead>
         <tr>
@@ -207,8 +182,12 @@
       </tfoot>
     </table>
 
-    <!-- Grafik -->
-    <div id="chartContainer" class="form-container">
+    <div class="history-container">
+      <h3>Riwayat Transaksi</h3>
+      <ul id="riwayatList" style="list-style:none; padding:0;"></ul>
+    </div>
+
+    <div id="chartContainer">
       <h3>Grafik Pertumbuhan</h3>
       <canvas id="chartGrowth"></canvas>
     </div>
@@ -217,6 +196,7 @@
   <script src="chart.min.js"></script>
   <script>
     let data = JSON.parse(localStorage.getItem("asetData")) || [];
+    let transaksi = JSON.parse(localStorage.getItem("transaksiData")) || [];
 
     function formatRupiah(angka) {
       return "Rp " + angka.toLocaleString("id-ID");
@@ -224,6 +204,7 @@
 
     function simpanLocalStorage() {
       localStorage.setItem("asetData", JSON.stringify(data));
+      localStorage.setItem("transaksiData", JSON.stringify(transaksi));
     }
 
     function tambahAtauUpdate() {
@@ -250,41 +231,37 @@
       simpanLocalStorage();
       renderTabel();
       renderChart();
-      document.querySelectorAll("input").forEach(input => input.value = '');
+      updateDropdown();
+      document.querySelectorAll(".form-container input").forEach(i => i.value = '');
     }
 
     function tambahTransaksi() {
-      const tanggal = document.getElementById("transTanggal").value;
-      const namaAset = document.getElementById("transNamaAset").value;
-      const tipe = document.getElementById("transTipe").value;
-      const nominal = parseFloat(document.getElementById("transNominal").value);
+      const tanggal = document.getElementById("trxTanggal").value;
+      const nama = document.getElementById("trxAset").value;
+      const tipe = document.getElementById("trxTipe").value;
+      const jumlah = parseFloat(document.getElementById("trxJumlah").value);
+      const keterangan = document.getElementById("trxKeterangan").value;
 
-      if (!tanggal || !namaAset || isNaN(nominal)) {
-        alert("Isi semua data transaksi dengan benar.");
+      if (!tanggal || !nama || !tipe || isNaN(jumlah) || !keterangan) {
+        alert("Mohon lengkapi data transaksi.");
         return;
       }
 
-      const aset = data.find(d => d.nama === namaAset);
-      if (!aset) {
-        alert("Aset tidak ditemukan.");
-        return;
-      }
+      transaksi.push({ tanggal, nama, tipe, jumlah, keterangan });
 
-      if (tipe === "pemasukan") {
-        aset.saldoAkhir += nominal;
-      } else {
-        aset.saldoAkhir -= nominal;
-      }
-
-      aset.growth = ((aset.saldoAkhir - aset.saldoAwal) / aset.saldoAwal) * 100;
+      data = data.map(a => {
+        if (a.nama === nama) {
+          a.saldoAkhir = tipe === "pemasukan" ? a.saldoAkhir + jumlah : a.saldoAkhir - jumlah;
+          a.growth = ((a.saldoAkhir - a.saldoAwal) / a.saldoAwal) * 100;
+        }
+        return a;
+      });
 
       simpanLocalStorage();
       renderTabel();
       renderChart();
-
-      document.getElementById("transTanggal").value = "";
-      document.getElementById("transNamaAset").value = "";
-      document.getElementById("transNominal").value = "";
+      renderRiwayat();
+      document.querySelectorAll(".transaction-form input").forEach(i => i.value = '');
     }
 
     function renderTabel() {
@@ -306,11 +283,11 @@
               <button class="action-btn edit-btn" onclick="editData(${index})">Edit</button>
               <button class="action-btn delete-btn" onclick="hapusData(${index})">Hapus</button>
             </td>
-          </tr>
-        `;
+          </tr>`;
       });
 
       document.getElementById("totalSaldo").innerText = formatRupiah(totalSaldo);
+      updateDropdown();
     }
 
     function editData(index) {
@@ -328,22 +305,28 @@
         simpanLocalStorage();
         renderTabel();
         renderChart();
+        updateDropdown();
       }
     }
 
-    function exportCSV() {
-      let csv = "Tanggal,Nama Aset,Saldo Awal,Saldo Akhir,Growth (%)\n";
-      data.forEach(item => {
-        csv += `${item.tanggal},${item.nama},${item.saldoAwal},${item.saldoAkhir},${item.growth.toFixed(2)}%\n`;
+    function renderRiwayat() {
+      const list = document.getElementById("riwayatList");
+      list.innerHTML = "";
+      transaksi.slice().reverse().forEach((t, i) => {
+        const simbol = t.tipe === "pemasukan" ? "+" : "-";
+        const warna = t.tipe === "pemasukan" ? "green" : "red";
+        list.innerHTML += `<li style="margin-bottom:6px;">
+          <strong>${t.tanggal}</strong> - <span style="color:${warna}">${simbol}${formatRupiah(t.jumlah)}</span> - <em>${t.keterangan}</em>
+        </li>`;
       });
+    }
 
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "asset-management.csv";
-      a.click();
-      URL.revokeObjectURL(url);
+    function updateDropdown() {
+      const select = document.getElementById("trxAset");
+      select.innerHTML = "";
+      data.forEach(d => {
+        select.innerHTML += `<option value="${d.nama}">${d.nama}</option>`;
+      });
     }
 
     function renderChart() {
@@ -370,23 +353,18 @@
       });
     }
 
-    const toggle = document.getElementById("darkToggle");
-    toggle.addEventListener("change", () => {
+    document.getElementById("darkToggle").addEventListener("change", () => {
       document.body.classList.toggle("dark");
-      localStorage.setItem("darkMode", toggle.checked);
+      localStorage.setItem("darkMode", document.body.classList.contains("dark"));
     });
-
     if (localStorage.getItem("darkMode") === "true") {
       document.body.classList.add("dark");
-      toggle.checked = true;
+      document.getElementById("darkToggle").checked = true;
     }
 
     renderTabel();
     renderChart();
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
-    }
+    renderRiwayat();
   </script>
 </body>
 </html>
