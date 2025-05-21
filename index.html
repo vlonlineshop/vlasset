@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asset & Money Management</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.png" />
+  <meta name="theme-color" content="#4e73df" />
+  <style>
+    :root {
+      --primary: #4e73df;
+      --background: #f8f9fc;
+      --text: #1b1e23;
+      --border: #dee2e6;
+      --card: #ffffff;
+    }
+    body.dark {
+      --primary: #4e73df;
+      --background: #1e1e2f;
+      --text: #ffffff;
+      --border: #444;
+      --card: #2a2a3d;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      padding: 20px;
+      margin: 0;
+      transition: background 0.3s, color 0.3s;
+    }
+    h2 { text-align: center; color: var(--primary); }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .form-container, table, #chartContainer {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      margin-top: 20px;
+    }
+    .form-container input, .form-container button {
+      padding: 10px;
+      margin: 8px 5px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    .form-container input { width: 180px; }
+    .form-container button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+    th { background: var(--primary); color: white; }
+    .action-btn { padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; }
+    .edit-btn { background: #f39c12; color: white; }
+    .delete-btn { background: #e74c3c; color: white; }
+    tfoot td { font-weight: bold; background: #e9ecef; }
+    .dark tfoot td { background: #333; }
+    .toggle-dark { float: right; margin-bottom: 10px; }
+    canvas { width: 100% !important; max-height: 400px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Asset & Money Management</h2>
+
+    <label class="toggle-dark">
+      <input type="checkbox" id="darkToggle"> Dark Mode
+    </label>
+
+    <div class="form-container">
+      <input type="hidden" id="editIndex">
+      <input type="date" id="tanggal">
+      <input type="text" id="nama" placeholder="Nama Aset">
+      <input type="number" id="saldoAwal" placeholder="Saldo Awal">
+      <input type="number" id="saldoAkhir" placeholder="Saldo Akhir">
+      <button onclick="tambahAtauUpdate()">Simpan</button>
+      <button onclick="exportCSV()">Export CSV</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Tanggal</th>
+          <th>Nama Aset</th>
+          <th>Saldo Awal</th>
+          <th>Saldo Akhir</th>
+          <th>Growth (%)</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tabelData"></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4">Total Saldo Akhir</td>
+          <td colspan="3" id="totalSaldo">Rp 0</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div id="chartContainer">
+      <h3 style="text-align:center">Grafik Pertumbuhan</h3>
+      <canvas id="chartGrowth"></canvas>
+    </div>
+  </div>
+
+  <script src="chart.min.js"></script>
+  <script>
+    let data = JSON.parse(localStorage.getItem("asetData")) || [];
+
+    function formatRupiah(angka) {
+      return "Rp " + angka.toLocaleString("id-ID");
+    }
+
+    function simpanLocalStorage() {
+      localStorage.setItem("asetData", JSON.stringify(data));
+    }
+
+    function tambahAtauUpdate() {
+      const tanggal = document.getElementById("tanggal").value;
+      const nama = document.getElementById("nama").value;
+      const saldoAwal = parseFloat(document.getElementById("saldoAwal").value);
+      const saldoAkhir = parseFloat(document.getElementById("saldoAkhir").value);
+      const editIndex = document.getElementById("editIndex").value;
+
+      if (!tanggal || !nama || isNaN(saldoAwal) || isNaN(saldoAkhir)) {
+        alert("Mohon isi semua kolom dengan benar.");
+        return;
+      }
+
+      const growth = ((saldoAkhir - saldoAwal) / saldoAwal) * 100;
+
+      if (editIndex === "") {
+        data.push({ tanggal, nama, saldoAwal, saldoAkhir, growth });
+      } else {
+        data[editIndex] = { tanggal, nama, saldoAwal, saldoAkhir, growth };
+        document.getElementById("editIndex").value = "";
+      }
+
+      simpanLocalStorage();
+      renderTabel();
+      renderChart();
+      document.querySelectorAll("input").forEach(input => input.value = '');
+    }
+
+    function renderTabel() {
+      const tbody = document.getElementById("tabelData");
+      tbody.innerHTML = "";
+      let totalSaldo = 0;
+
+      data.forEach((item, index) => {
+        totalSaldo += item.saldoAkhir;
+        tbody.innerHTML += `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${item.tanggal}</td>
+            <td>${item.nama}</td>
+            <td>${formatRupiah(item.saldoAwal)}</td>
+            <td>${formatRupiah(item.saldoAkhir)}</td>
+            <td>${item.growth.toFixed(2)}%</td>
+            <td>
+              <button class="action-btn edit-btn" onclick="editData(${index})">Edit</button>
+              <button class="action-btn delete-btn" onclick="hapusData(${index})">Hapus</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      document.getElementById("totalSaldo").innerText = formatRupiah(totalSaldo);
+    }
+
+    function editData(index) {
+      const item = data[index];
+      document.getElementById("tanggal").value = item.tanggal;
+      document.getElementById("nama").value = item.nama;
+      document.getElementById("saldoAwal").value = item.saldoAwal;
+      document.getElementById("saldoAkhir").value = item.saldoAkhir;
+      document.getElementById("editIndex").value = index;
+    }
+
+    function hapusData(index) {
+      if (confirm("Yakin ingin menghapus data ini?")) {
+        data.splice(index, 1);
+        simpanLocalStorage();
+        renderTabel();
+        renderChart();
+      }
+    }
+
+    function exportCSV() {
+      let csv = "Tanggal,Nama Aset,Saldo Awal,Saldo Akhir,Growth (%)\n";
+      data.forEach(item => {
+        csv += `${item.tanggal},${item.nama},${item.saldoAwal},${item.saldoAkhir},${item.growth.toFixed(2)}%\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "asset-management.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function renderChart() {
+      const ctx = document.getElementById("chartGrowth").getContext("2d");
+      const labels = data.map(d => d.nama);
+      const growthData = data.map(d => d.growth.toFixed(2));
+      if (window.myChart) window.myChart.destroy();
+      window.myChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Growth (%)",
+            data: growthData,
+            backgroundColor: "#4e73df"
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    // Dark mode
+    const toggle = document.getElementById("darkToggle");
+    toggle.addEventListener("change", () => {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("darkMode", toggle.checked);
+    });
+
+    if (localStorage.getItem("darkMode") === "true") {
+      document.body.classList.add("dark");
+      toggle.checked = true;
+    }
+
+    renderTabel();
+    renderChart();
+
+    // PWA registration
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+</body>
+</html>
