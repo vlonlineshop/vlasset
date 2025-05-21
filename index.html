@@ -30,42 +30,123 @@
       margin: 0;
       transition: background 0.3s, color 0.3s;
     }
-    h2 { text-align: center; color: var(--primary); }
+    h2, h3 { text-align: center; color: var(--primary); }
     .container { max-width: 1000px; margin: 0 auto; }
-    .form-container, table, #chartContainer {
+
+    .form-container {
       background: var(--card);
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.05);
       margin-top: 20px;
+      animation: fadeIn 0.6s ease;
     }
-    .form-container input, .form-container button {
+
+    .form-container input,
+    .form-container select,
+    .form-container button {
       padding: 10px;
       margin: 8px 5px;
       border: 1px solid var(--border);
       border-radius: 6px;
+      font-size: 1em;
+      transition: all 0.3s ease;
     }
-    .form-container input { width: 180px; }
+
+    .form-container input:focus,
+    .form-container select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 5px var(--primary);
+      outline: none;
+    }
+
+    .form-container input,
+    .form-container select {
+      width: calc(50% - 20px);
+    }
+
     .form-container button {
       background-color: var(--primary);
       color: white;
       border: none;
       cursor: pointer;
     }
-    table { width: 100%; border-collapse: collapse; }
+
+    .form-container button:hover {
+      background-color: #3b5cc3;
+      transform: scale(1.02);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      margin-top: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
     th, td {
       padding: 10px;
       border-bottom: 1px solid var(--border);
       text-align: center;
     }
+
     th { background: var(--primary); color: white; }
-    .action-btn { padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; }
+    .action-btn {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
     .edit-btn { background: #f39c12; color: white; }
     .delete-btn { background: #e74c3c; color: white; }
+
     tfoot td { font-weight: bold; background: #e9ecef; }
     .dark tfoot td { background: #333; }
+
     .toggle-dark { float: right; margin-bottom: 10px; }
+
     canvas { width: 100% !important; max-height: 400px; }
+
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .btn-transaksi {
+      width: 100%;
+      padding: 12px;
+      background-color: var(--primary);
+      color: white;
+      font-size: 1em;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .btn-transaksi:hover {
+      background-color: #3b5cc3;
+      transform: scale(1.02);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      .form-container input,
+      .form-container select {
+        width: 100%;
+      }
+      .form-row { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
@@ -76,6 +157,7 @@
       <input type="checkbox" id="darkToggle"> Dark Mode
     </label>
 
+    <!-- Form Aset -->
     <div class="form-container">
       <input type="hidden" id="editIndex">
       <input type="date" id="tanggal">
@@ -86,6 +168,24 @@
       <button onclick="exportCSV()">Export CSV</button>
     </div>
 
+    <!-- Form Transaksi -->
+    <div class="form-container transaksi-form">
+      <h3>Tambah Transaksi</h3>
+      <div class="form-row">
+        <input type="date" id="transTanggal">
+        <input type="text" id="transNamaAset" placeholder="Nama Aset">
+      </div>
+      <div class="form-row">
+        <select id="transTipe">
+          <option value="pemasukan">Pemasukan</option>
+          <option value="pengeluaran">Pengeluaran</option>
+        </select>
+        <input type="number" id="transNominal" placeholder="Jumlah">
+      </div>
+      <button class="btn-transaksi" onclick="tambahTransaksi()">Tambah Transaksi</button>
+    </div>
+
+    <!-- Tabel Aset -->
     <table>
       <thead>
         <tr>
@@ -107,8 +207,9 @@
       </tfoot>
     </table>
 
-    <div id="chartContainer">
-      <h3 style="text-align:center">Grafik Pertumbuhan</h3>
+    <!-- Grafik -->
+    <div id="chartContainer" class="form-container">
+      <h3>Grafik Pertumbuhan</h3>
       <canvas id="chartGrowth"></canvas>
     </div>
   </div>
@@ -150,6 +251,40 @@
       renderTabel();
       renderChart();
       document.querySelectorAll("input").forEach(input => input.value = '');
+    }
+
+    function tambahTransaksi() {
+      const tanggal = document.getElementById("transTanggal").value;
+      const namaAset = document.getElementById("transNamaAset").value;
+      const tipe = document.getElementById("transTipe").value;
+      const nominal = parseFloat(document.getElementById("transNominal").value);
+
+      if (!tanggal || !namaAset || isNaN(nominal)) {
+        alert("Isi semua data transaksi dengan benar.");
+        return;
+      }
+
+      const aset = data.find(d => d.nama === namaAset);
+      if (!aset) {
+        alert("Aset tidak ditemukan.");
+        return;
+      }
+
+      if (tipe === "pemasukan") {
+        aset.saldoAkhir += nominal;
+      } else {
+        aset.saldoAkhir -= nominal;
+      }
+
+      aset.growth = ((aset.saldoAkhir - aset.saldoAwal) / aset.saldoAwal) * 100;
+
+      simpanLocalStorage();
+      renderTabel();
+      renderChart();
+
+      document.getElementById("transTanggal").value = "";
+      document.getElementById("transNamaAset").value = "";
+      document.getElementById("transNominal").value = "";
     }
 
     function renderTabel() {
@@ -235,7 +370,6 @@
       });
     }
 
-    // Dark mode
     const toggle = document.getElementById("darkToggle");
     toggle.addEventListener("change", () => {
       document.body.classList.toggle("dark");
@@ -250,7 +384,6 @@
     renderTabel();
     renderChart();
 
-    // PWA registration
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js');
     }
